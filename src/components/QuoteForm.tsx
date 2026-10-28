@@ -1,11 +1,12 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import {
   AddressAutocomplete,
   isAddressSelectionRequired,
 } from "@/components/AddressAutocomplete";
 import { VisitCalendar } from "@/components/VisitCalendar";
+import { fetchBlockedDates } from "@/lib/availability";
 import { config } from "@/lib/config";
 import { formatFriendlyDate, isDateSelectable } from "@/lib/dates";
 import {
@@ -40,6 +41,29 @@ export function QuoteForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState<{ leadId?: string; date: string } | null>(null);
+  const [blockedDates, setBlockedDates] = useState<string[]>([]);
+  const [maxPerDay, setMaxPerDay] = useState(3);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+
+  useEffect(() => {
+    if (!calendarOpen) return;
+    let cancelled = false;
+    setAvailabilityLoading(true);
+    void fetchBlockedDates().then((result) => {
+      if (cancelled) return;
+      setBlockedDates(result.fullDates);
+      setMaxPerDay(result.maxPerDay);
+      setAvailabilityLoading(false);
+      if (selectedDate && result.fullDates.includes(selectedDate)) {
+        setSelectedDate("");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+    // Refresh when the picker opens
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [calendarOpen]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -81,7 +105,7 @@ export function QuoteForm() {
     }
 
     const [y, m, d] = selectedDate.split("-").map(Number);
-    if (!isDateSelectable(new Date(y, m - 1, d, 12))) {
+    if (!isDateSelectable(new Date(y, m - 1, d, 12), new Set(blockedDates))) {
       setError("Please choose an available Monday, Tuesday, or Wednesday.");
       return;
     }
@@ -181,6 +205,7 @@ export function QuoteForm() {
               id="firstName"
               required
               autoComplete="given-name"
+              placeholder="John"
               value={form.firstName}
               onChange={(e) => update("firstName", e.target.value)}
             />
@@ -191,6 +216,7 @@ export function QuoteForm() {
               id="lastName"
               required
               autoComplete="family-name"
+              placeholder="Smith"
               value={form.lastName}
               onChange={(e) => update("lastName", e.target.value)}
             />
@@ -203,7 +229,7 @@ export function QuoteForm() {
               required
               inputMode="email"
               autoComplete="email"
-              placeholder="name@email.com"
+              placeholder="johnsmith@gmail.com"
               pattern="[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+"
               title="Enter a valid email address"
               value={form.email}
@@ -268,7 +294,8 @@ export function QuoteForm() {
                   When should we come out?
                 </h3>
                 <p className="mt-1 text-sm text-[var(--ink-muted)]">
-                  Available Mondays, Tuesdays & Wednesdays for your free quote visit.
+                  Available Mondays, Tuesdays & Wednesdays
+                  {maxPerDay ? ` · up to ${maxPerDay} visits/day` : ""}.
                 </p>
               </div>
               <button
@@ -280,8 +307,15 @@ export function QuoteForm() {
               </button>
             </div>
 
+            {availabilityLoading && (
+              <p className="mt-4 text-sm font-semibold text-[var(--ink-muted)]">
+                Checking calendar availability…
+              </p>
+            )}
+
             <VisitCalendar
               selectedDate={selectedDate}
+              blockedDates={blockedDates}
               onSelect={(iso) => {
                 setSelectedDate(iso);
                 setError("");

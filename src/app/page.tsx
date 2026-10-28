@@ -6,13 +6,14 @@ export default function HomePage() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[760px] flex-col justify-center px-5 py-10 sm:px-8 sm:py-14">
       <header className="mb-7 text-center">
-        <div className="relative mx-auto mb-5 h-[100px] w-[250px] sm:h-[124px] sm:w-[310px]">
+        <div className="relative mx-auto mb-5 h-[108px] w-[280px] sm:h-[132px] sm:w-[340px]">
           <Image
             src="/logo-transparent.png"
             alt={config.appName}
             fill
             className="object-contain"
-            sizes="310px"
+            sizes="(max-width: 640px) 280px, 340px"
+            quality={100}
             priority
           />
         </div>
