@@ -1,5 +1,7 @@
-/** Service visit days: Monday=1, Tuesday=2, Wednesday=3 */
-export const SERVICE_WEEKDAYS = new Set([1, 2, 3]);
+/** Default service days until schedule loads: Monday=1, Tuesday=2, Wednesday=3 */
+export const DEFAULT_SERVICE_WEEKDAYS = [1, 2, 3];
+
+export const SERVICE_WEEKDAYS = new Set(DEFAULT_SERVICE_WEEKDAYS);
 
 export const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -25,8 +27,19 @@ export function isSameDay(a: Date, b: Date): boolean {
   );
 }
 
-export function isServiceWeekday(date: Date): boolean {
-  return SERVICE_WEEKDAYS.has(date.getDay());
+export function normalizeWorkdays(workdays?: number[] | null): number[] {
+  const days = Array.isArray(workdays)
+    ? [...new Set(workdays.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))]
+    : [];
+  days.sort((a, b) => a - b);
+  return days.length ? days : [...DEFAULT_SERVICE_WEEKDAYS];
+}
+
+export function isServiceWeekday(
+  date: Date,
+  workdays: number[] = DEFAULT_SERVICE_WEEKDAYS
+): boolean {
+  return workdays.includes(date.getDay());
 }
 
 /** Earliest bookable day = tomorrow at noon. */
@@ -45,13 +58,13 @@ export function getBookingEndDate(now = new Date()): Date {
 
 /**
  * True when this date can be selected today.
- * Ready for Google Calendar: pass `blockedDates` (ISO yyyy-mm-dd) later.
  */
 export function isDateSelectable(
   date: Date,
-  blockedDates: Set<string> = new Set()
+  blockedDates: Set<string> = new Set(),
+  workdays: number[] = DEFAULT_SERVICE_WEEKDAYS
 ): boolean {
-  if (!isServiceWeekday(date)) return false;
+  if (!isServiceWeekday(date, workdays)) return false;
 
   const start = getBookingStartDate();
   const end = getBookingEndDate();
@@ -74,7 +87,8 @@ export type CalendarCell = {
 /** Build a Sunday-start month grid (6 weeks × 7 days). */
 export function buildMonthCells(
   month: Date,
-  blockedDates: Set<string> = new Set()
+  blockedDates: Set<string> = new Set(),
+  workdays: number[] = DEFAULT_SERVICE_WEEKDAYS
 ): CalendarCell[] {
   const first = startOfMonth(month);
   const today = atNoon(new Date());
@@ -90,7 +104,7 @@ export function buildMonthCells(
       date,
       iso: toISODate(date),
       inMonth: date.getMonth() === first.getMonth(),
-      selectable: isDateSelectable(date, blockedDates),
+      selectable: isDateSelectable(date, blockedDates, workdays),
       isToday: isSameDay(date, today),
     });
   }

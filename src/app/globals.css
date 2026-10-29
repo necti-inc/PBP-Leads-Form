@@ -133,25 +133,105 @@ button {
   position: fixed;
   inset: 0;
   z-index: 50;
-  display: grid;
-  place-items: center;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  background: rgba(8, 20, 28, 0.58);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .modal-card {
-  width: min(520px, 100%);
-  max-height: min(88dvh, 720px);
-  overflow: auto;
-  border-radius: 22px;
+  width: 100%;
+  max-height: min(94dvh, 820px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 22px 22px 0 0;
   background: white;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
-  padding: 1.35rem;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.22);
 }
 
 .modal-card--calendar {
-  width: min(440px, 100%);
+  width: 100%;
+}
+
+.modal-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  padding: 1.15rem 1.15rem 0.85rem;
+  border-bottom: 1px solid rgba(0, 173, 239, 0.12);
+}
+
+.modal-card__close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink-muted);
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modal-card__close:hover {
+  border-color: var(--brand);
+  color: var(--brand-deep);
+}
+
+.modal-card__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.85rem 1.15rem 1rem;
+}
+
+.modal-card__body .mt-5 {
+  margin-top: 0;
+}
+
+.modal-card__footer {
+  flex-shrink: 0;
+  padding: 0.9rem 1.15rem calc(0.9rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgba(0, 173, 239, 0.12);
+  background: #f7fcff;
+}
+
+@media (min-width: 640px) {
+  .modal-backdrop {
+    align-items: center;
+    padding: 1.25rem;
+  }
+
+  .modal-card,
+  .modal-card--calendar {
+    width: min(440px, 100%);
+    max-height: min(88dvh, 760px);
+    border-radius: 22px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
+  }
+
+  .modal-card__header {
+    padding: 1.25rem 1.25rem 0.9rem;
+  }
+
+  .modal-card__body {
+    padding: 0.9rem 1.25rem 1.1rem;
+  }
+
+  .modal-card__footer {
+    padding: 1rem 1.25rem;
+  }
 }
 
 .address-input-wrap--verified input {
